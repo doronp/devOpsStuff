@@ -1,0 +1,14 @@
+- hosts: all
+  tasks:
+    - name: 'Ensure that we can connect to this host'
+      ping:
+  roles:
+    - role: 'marvinpinto.docker'
+      sudo: true
+  tasks:
+    - name: 'Ensure that the docker daemon is functional'
+      sudo: true
+      docker_ping:
+      retries: 5
+      delay: 10
+      until: result|success

@@ -1,0 +1,10 @@
+- name: Install consul 
+  hosts: consul
+  tasks:
+    - name: Run consul inside a docker container
+      become: yes
+      docker:
+        name: myConsul
+        image: "progrium/consul"
+        state: started
+        ports: 8500:8500, 8300:8300, 8400:8400, 8301:8301, 8302:8302

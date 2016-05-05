@@ -1,0 +1,4 @@
+- hosts: docker
+  tasks:
+    - name: Install docker engine of the required nodes.
+      apt: name=docker-engine state=latest update_cache=yes

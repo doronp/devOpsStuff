@@ -1,0 +1,16 @@
+- name: Install Swarm replica
+  hosts: docker1
+  tasks:
+    - name: Makeengine join to the Swarm Cluster
+      become: yes
+      docker:
+        name: swarm
+        image: swarm
+        command: "join --advertise 10.0.15.21:4000 consul://10.0.15.41:8500"
+        state: started
+        ports:
+          - "4000:4000"
+        expose: 
+          - 4000
+      tags:
+        - swarm

@@ -1,0 +1,16 @@
+- name: Install Swarm 
+  hosts: swarmManager1
+  tasks:
+    - name: Run swarm inside a docker container
+      become: yes
+      docker:
+        name: swarm
+        image: swarm
+        command: "manage -H :4000 --replication --advertise 10.0.15.31:4000 consul://10.0.15.41:8500"
+        state: started
+        ports:
+          - "4000:4000"
+        expose: 
+          - 4000
+      tags:
+        - swarm

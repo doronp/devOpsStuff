@@ -1,0 +1,12 @@
+[consul]
+consul1 ansible_host=10.0.15.41 ansible_ssh_user=vagrant ansible_ssh_pass=vagrant
+
+[swarmManager]
+swarmManager1 ansible_host=10.0.15.31 ansible_ssh_user=vagrant ansible_ssh_pass=vagrant
+swarmManager2 ansible_host=10.0.15.32 ansible_ssh_user=vagrant ansible_ssh_pass=vagrant
+#swarmManager3
+
+[docker]
+docker1 ansible_host=10.0.15.21 ansible_ssh_user=vagrant ansible_ssh_pass=vagrant
+#docker2
+#docker3
