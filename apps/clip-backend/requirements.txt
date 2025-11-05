@@ -1,0 +1,20 @@
+# Core dependencies
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+python-multipart>=0.0.6
+
+# ML/AI
+torch>=2.1.0
+open-clip-torch>=2.23.0
+pillow>=10.0.0
+numpy>=1.24.0
+
+# Search
+faiss-cpu>=1.7.4
+
+# Data validation
+pydantic>=2.0.0
+pydantic-settings>=2.0.0
+python-dotenv>=1.0.0
+
+# Development dependencies (install with: pip install -r requirements-dev.txt)
