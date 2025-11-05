@@ -1,0 +1,261 @@
+/**
+ * stop-prettier-formatter Hook - Auto-format Code (DISABLED BY DEFAULT)
+ *
+ * ⚠️ THIS HOOK IS DISABLED BY DEFAULT ⚠️
+ *
+ * This hook would run Prettier (or other formatters) after Claude finishes
+ * making changes. However, it is DISABLED by default because:
+ *
+ * 1. <system-reminder> Token Cost: Each formatting change triggers a
+ *    system reminder that Claude must read, consuming context tokens.
+ *
+ * 2. Unnecessary Noise: Minor formatting changes (whitespace, semicolons)
+ *    create noise in the edit logs and can distract from actual changes.
+ *
+ * 3. Better Alternatives:
+ *    - Use editor auto-format on save
+ *    - Run formatters in pre-commit hooks
+ *    - Use CI/CD to enforce formatting
+ *
+ * TO ENABLE THIS HOOK:
+ * 1. Rename this file from .DISABLED to .ts
+ * 2. Ensure Prettier (or your formatter) is installed
+ * 3. Configure FORMATTER_COMMANDS for your project
+ * 4. Test thoroughly to ensure it works with your workflow
+ *
+ * Installation:
+ * 1. Only enable if you understand the trade-offs
+ * 2. Requires postToolUse-edit-tracker.ts to be installed
+ * 3. Customize FORMATTER_COMMANDS to match your formatters
+ */
+
+import { exec } from 'child_process';
+import { promisify } from 'util';
+import * as path from 'path';
+import { getEditedFilesByType, clearSessionEdits } from './postToolUse-edit-tracker';
+
+const execAsync = promisify(exec);
+
+// =============================================================================
+// Configuration
+// =============================================================================
+
+const ENABLED = false; // Keep false unless you really want this
+const TIMEOUT_MS = 10000; // 10 second timeout
+
+interface FormatterConfig {
+  name: string;
+  fileTypes: string[]; // File extensions
+  command: string; // Command template, use {file} as placeholder
+  workingDir?: string; // Optional: specific directory to run command
+}
+
+const FORMATTER_COMMANDS: FormatterConfig[] = [
+  {
+    name: 'Prettier',
+    fileTypes: ['.ts', '.tsx', '.js', '.jsx', '.json', '.css', '.html'],
+    command: 'pnpm prettier --write {file}'
+  },
+  {
+    name: 'Black',
+    fileTypes: ['.py'],
+    command: 'black {file}'
+  },
+  {
+    name: 'Ruff Format',
+    fileTypes: ['.py'],
+    command: 'ruff format {file}'
+  }
+];
+
+// =============================================================================
+// Main Hook Function
+// =============================================================================
+
+export async function stop(context: { workingDirectory: string }): Promise<string> {
+  if (!ENABLED) {
+    return '';
+  }
+
+  try {
+    // Get all file types we can format
+    const allFileTypes = new Set(
+      FORMATTER_COMMANDS.flatMap(f => f.fileTypes)
+    );
+
+    const editedFiles = getEditedFilesByType(
+      context.workingDirectory,
+      Array.from(allFileTypes)
+    );
+
+    if (editedFiles.length === 0) {
+      return '';
+    }
+
+    // Format each file
+    const results: FormatResult[] = [];
+
+    for (const filePath of editedFiles) {
+      const ext = path.extname(filePath);
+      const formatter = FORMATTER_COMMANDS.find(f => f.fileTypes.includes(ext));
+
+      if (!formatter) {
+        continue;
+      }
+
+      const result = await formatFile(
+        context.workingDirectory,
+        filePath,
+        formatter
+      );
+
+      results.push(result);
+    }
+
+    // Clear session edits
+    clearSessionEdits(context.workingDirectory);
+
+    // Format output
+    return formatResults(results);
+
+  } catch (error) {
+    console.error('[stop-prettier-formatter] Error:', error);
+    return '';
+  }
+}
+
+// =============================================================================
+// Core Logic
+// =============================================================================
+
+interface FormatResult {
+  filePath: string;
+  formatter: string;
+  success: boolean;
+  error?: string;
+}
+
+async function formatFile(
+  workingDir: string,
+  filePath: string,
+  formatter: FormatterConfig
+): Promise<FormatResult> {
+  try {
+    // Replace {file} placeholder with actual file path
+    const command = formatter.command.replace('{file}', filePath);
+
+    const cwd = formatter.workingDir
+      ? path.join(workingDir, formatter.workingDir)
+      : workingDir;
+
+    await execAsync(command, {
+      cwd,
+      timeout: TIMEOUT_MS
+    });
+
+    return {
+      filePath,
+      formatter: formatter.name,
+      success: true
+    };
+
+  } catch (error: any) {
+    return {
+      filePath,
+      formatter: formatter.name,
+      success: false,
+      error: error.message
+    };
+  }
+}
+
+function formatResults(results: FormatResult[]): string {
+  const successful = results.filter(r => r.success);
+  const failed = results.filter(r => !r.success);
+
+  if (successful.length === 0 && failed.length === 0) {
+    return '';
+  }
+
+  const lines = ['', '🎨 CODE FORMATTING', ''];
+
+  if (successful.length > 0) {
+    lines.push(`✓ Formatted ${successful.length} file(s)`);
+  }
+
+  if (failed.length > 0) {
+    lines.push('', '⚠️  Failed to format:');
+    for (const result of failed) {
+      lines.push(`  - ${result.filePath}: ${result.error}`);
+    }
+  }
+
+  return lines.join('\n');
+}
+
+// =============================================================================
+// Export
+// =============================================================================
+
+export default stop;
+
+// =============================================================================
+// Why This Is Disabled
+// =============================================================================
+
+/**
+ * DETAILED EXPLANATION:
+ *
+ * When this hook formats a file, the Write tool is triggered, which causes
+ * Claude to receive a <system-reminder> about the file being modified.
+ * This reminder:
+ *
+ * 1. Costs tokens: Claude must process these reminders, using valuable
+ *    context window space.
+ *
+ * 2. Creates noise: Minor formatting changes (adding/removing semicolons,
+ *    adjusting whitespace) don't add value to the conversation but must
+ *    be tracked.
+ *
+ * 3. Can cause confusion: Claude might think the formatter changes are
+ *    part of the task and comment on them unnecessarily.
+ *
+ * BETTER ALTERNATIVES:
+ *
+ * 1. Editor Integration:
+ *    - VS Code: "editor.formatOnSave": true
+ *    - Cursor: Same as VS Code
+ *    - Other editors: Similar settings
+ *
+ * 2. Pre-commit Hooks:
+ *    ```bash
+ *    # .husky/pre-commit
+ *    pnpm lint-staged
+ *    ```
+ *
+ *    ```json
+ *    // package.json
+ *    "lint-staged": {
+ *      "*.{ts,tsx,js,jsx}": "prettier --write",
+ *      "*.py": "black"
+ *    }
+ *    ```
+ *
+ * 3. CI/CD Checks:
+ *    - Run formatters in CI
+ *    - Fail build if code is not formatted
+ *    - Prevents unformatted code from being merged
+ *
+ * WHEN TO ENABLE:
+ *
+ * Only enable this hook if:
+ * - You understand the token cost implications
+ * - You can't use editor auto-format
+ * - You don't have pre-commit hooks
+ * - You're working in a constrained environment
+ *
+ * If you do enable, consider:
+ * - Setting a high token budget
+ * - Only enabling for specific file types
+ * - Using sparingly (enable/disable as needed)
+ */

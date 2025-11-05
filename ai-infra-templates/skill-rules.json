@@ -1,0 +1,173 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "description": "Skill activation rules for Claude Code. Copy to .claude/skill-rules.json and customize paths for your project.",
+  "skills": [
+    {
+      "name": "frontend-desktop-guidelines",
+      "type": "domain",
+      "description": "Electron + React + TypeScript desktop application patterns",
+      "enforcement": "suggest",
+      "priority": "high",
+      "promptTriggers": {
+        "keywords": [
+          "electron",
+          "desktop",
+          "window",
+          "renderer",
+          "main process",
+          "IPC",
+          "React",
+          "component",
+          "UI",
+          "frontend",
+          "interface",
+          "screen"
+        ],
+        "intentPatterns": [
+          "create.*component",
+          "implement.*UI",
+          "add.*screen",
+          "desktop.*feature",
+          "electron.*window",
+          "IPC.*communication"
+        ]
+      },
+      "fileTriggers": {
+        "pathPatterns": [
+          "apps/desktop-ui/**/*.{ts,tsx,js,jsx}",
+          "src/renderer/**/*.{ts,tsx}",
+          "src/components/**/*.{ts,tsx}",
+          "src/screens/**/*.{ts,tsx}",
+          "electron/**/*.ts"
+        ],
+        "contentPatterns": [
+          "from ['\"]react['\"]",
+          "import.*electron",
+          "window\\.electron",
+          "ipcRenderer",
+          "BrowserWindow"
+        ]
+      }
+    },
+    {
+      "name": "backend-ml-guidelines",
+      "type": "domain",
+      "description": "ML backend service patterns with Python, FastAPI, OpenCLIP",
+      "enforcement": "suggest",
+      "priority": "high",
+      "promptTriggers": {
+        "keywords": [
+          "backend",
+          "API",
+          "endpoint",
+          "FastAPI",
+          "model",
+          "embedding",
+          "OpenCLIP",
+          "CLIP",
+          "FAISS",
+          "index",
+          "search",
+          "inference",
+          "PyTorch",
+          "torch"
+        ],
+        "intentPatterns": [
+          "implement.*endpoint",
+          "create.*API",
+          "load.*model",
+          "generate.*embedding",
+          "index.*images",
+          "search.*query",
+          "backend.*service"
+        ]
+      },
+      "fileTriggers": {
+        "pathPatterns": [
+          "apps/*backend*/**/*.py",
+          "apps/clip-backend/**/*.py",
+          "src/api/**/*.py",
+          "src/models/**/*.py",
+          "src/services/**/*.py"
+        ],
+        "contentPatterns": [
+          "from fastapi import",
+          "import open_clip",
+          "import faiss",
+          "import torch",
+          "@app\\.(get|post|put|delete)",
+          "class.*Model\\(BaseModel\\)"
+        ]
+      }
+    },
+    {
+      "name": "project-setup-guidelines",
+      "type": "meta",
+      "description": "Project organization, dev docs, skills, hooks",
+      "enforcement": "suggest",
+      "priority": "normal",
+      "promptTriggers": {
+        "keywords": [
+          "setup",
+          "dev docs",
+          "skill",
+          "hook",
+          "project structure",
+          "organize",
+          "workflow",
+          "template"
+        ],
+        "intentPatterns": [
+          "create.*dev docs",
+          "set.*up.*project",
+          "organize.*feature",
+          "how.*workflow",
+          "create.*template"
+        ]
+      },
+      "fileTriggers": {
+        "pathPatterns": [
+          "CLAUDE.md",
+          ".claude/**/*.{md,json,ts}",
+          "docs/PROJECT_KNOWLEDGE.md",
+          "docs/ARCHITECTURE.md",
+          "dev/active/**/*.md",
+          "dev/templates/**/*.md"
+        ],
+        "contentPatterns": [
+          "# .*- Plan",
+          "# .*- Context",
+          "# .*- Tasks"
+        ]
+      }
+    }
+  ],
+  "globalRules": {
+    "maxActiveSuggestions": 3,
+    "suggestionFormat": "block",
+    "includeReason": true,
+    "deduplicateByType": true
+  },
+  "customization": {
+    "note": "To customize for your project:",
+    "steps": [
+      "1. Copy this file to .claude/skill-rules.json in your project root",
+      "2. Update pathPatterns to match your actual directory structure",
+      "3. Add/remove keywords relevant to your tech stack",
+      "4. Adjust priority levels (high/normal/low) based on your needs",
+      "5. Add custom skills by copying skill objects and modifying"
+    ],
+    "exampleCustomization": {
+      "pathPatterns": [
+        "Change 'apps/desktop-ui' to your actual frontend path",
+        "Change 'apps/clip-backend' to your actual backend path",
+        "Use glob patterns: **/*.ext for recursive, *.ext for current dir only"
+      ],
+      "keywords": [
+        "Add framework-specific terms (e.g., 'Redux', 'Vue', 'Django')",
+        "Add domain-specific terms (e.g., 'authentication', 'payments')",
+        "Keep generic terms that apply broadly"
+      ]
+    }
+  }
+}
