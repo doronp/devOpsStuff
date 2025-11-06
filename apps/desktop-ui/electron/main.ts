@@ -1,10 +1,7 @@
 import { app, BrowserWindow, ipcMain, dialog } from 'electron';
 import * as path from 'path';
-import { fileURLToPath } from 'url';
 
-// ESM __dirname alternative
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// __dirname and __filename are available in CommonJS
 
 let mainWindow: BrowserWindow | null = null;
 

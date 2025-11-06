@@ -2,7 +2,7 @@
   "name": "desktop-ui",
   "version": "1.0.0",
   "description": "OpenCLIP Desktop Image Search",
-  "main": "dist-electron/main.js",
+  "main": "dist-electron/electron/main.js",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
